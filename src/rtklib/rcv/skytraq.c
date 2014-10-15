@@ -38,6 +38,12 @@
 
 static const char rcsid[]="$Id:$";
 
+/* Added by Roice, 20141015
+ * Global argument storing the latest unix time converted from GPS time
+ * which is extracted from GPS raw data.
+ */
+time_t unixtime = 0;
+
 /* extract field (big-endian) ------------------------------------------------*/
 #define U1(p)       (*((unsigned char *)(p)))
 #define I1(p)       (*((char *)(p)))
@@ -98,6 +104,14 @@ static int decode_stqtime(raw_t *raw)
     week    =U2(p+2);
     tow     =U4(p+4)*0.001;
     raw->time=gpst2time(week,tow);
+
+/* Added by Roice, 20141014
+ * Copy the latest GPS time (unix time format) to global(extern)
+ * "time_t unixtime", then it could be utilized by main function
+ * to update the system time.
+ */
+    unixtime = raw->time.time;
+
     return 0;
 }
 /* decode skytraq raw channel mesurement -------------------------------------*/

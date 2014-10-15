@@ -27,6 +27,11 @@ static const char rcsid[]="$Id:$";
 static strsvr_t strsvr;                /* stream server */
 static int intrflg=0;                  /* interrupt flag */
 
+/* Added by Roice, 20141015
+ * Defined in src/rtklib/rcv/skytraq.c:LN45
+ */
+extern time_t unixtime;
+
 /* help text -----------------------------------------------------------------*/
 static const char *help[]={
 "",
@@ -176,7 +181,7 @@ int main(int argc, char **argv)
     int i,n=0,dispint=5000,trlevel=0,opts[]={10000,10000,2000,32768,10,0,30};
     int types[MAXSTR]={0},stat[MAXSTR]={0},byte[MAXSTR]={0},bps[MAXSTR]={0};
     int fmts[MAXSTR],sta=0;
-    
+
     for (i=0;i<MAXSTR;i++) paths[i]=s[i];
     
     for (i=1;i<argc;i++) {
@@ -261,6 +266,49 @@ int main(int argc, char **argv)
         
         fprintf(stderr,"%s [%s] %10d B %7d bps %s\n",
                 time_str(utc2gpst(timeget()),0),buff,byte[0],bps[0],strmsg);
+       
+/* Added by Roice, 20141015
+ * Function: Use the real-time reloaded time_t unixtime to update the system
+ *           time.
+ *
+ * Note:     If the time difference is less than 1 sec, then it will not
+ *           update.
+ *
+ *           The unixtime will be cleared to 0 at the end of this strsvrstat
+ *           status cheking loop (before the time delay). So when at the
+ *           beginning of this loop, if unixtime == 0, which means the
+ *           unixtime has not been updated since leaving latest loop
+ *           execution (usually 5 seconds before) because unixtime is
+ *           reloading very fast(20Hz for S1315F receiver), then the system
+ *           time will not update.
+ *
+ *           The 3 main reasons for unixtime == 0 are 
+ *           (1) the program is newly initialized and executed here the
+ *             first time, 
+ *           (2) the output stream(s) do not need to convert format, that
+ *             is to say the strconv function(which lead to gpst2time
+ *             convert / time extract behavior) in src/rtklib/streamsvr.c:
+ *             LN378 will not been executed at all, 
+ *           (3) the GPS signal or Receiver connection was broken and
+ *             unixtime is not reloading anymore.
+ */
+
+        if (unixtime != 0)
+        {
+            /* if time diff is lager than 1sec, then update */
+            /*gettimeofday(tv_system, tz_system);*/
+            if (abs(unixtime - time(NULL)) > 1)
+            {
+                /* if return value of function stime is 0, then
+                 * the system time is successfully updated. */
+                if (stime(&unixtime) == 0)
+                    fprintf(stderr,"System time updated successfully from %x to %x.\n", time(NULL), unixtime);
+                else
+                    fprintf(stderr, "System time update failed!");
+            }
+        }
+        /* clear this time for active cheking */
+        unixtime = 0;
         
         sleepms(dispint);
     }
