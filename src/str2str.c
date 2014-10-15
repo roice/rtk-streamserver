@@ -304,7 +304,7 @@ int main(int argc, char **argv)
                 if (stime(&unixtime) == 0)
                     fprintf(stderr,"System time updated successfully from %x to %x.\n", time(NULL), unixtime);
                 else
-                    fprintf(stderr, "System time update failed!");
+                    fprintf(stderr, "System time update failed!\n");
             }
         }
         /* clear this time for active cheking */
