@@ -302,14 +302,15 @@ int main(int argc, char **argv)
 
         if (unixtime > LEAPSEC)
         {
+            /* convert from GPS time to UTC time */
+            unixtime = unixtime - LEAPSEC;
             /* if time diff is lager than 1sec, then update */
             /*gettimeofday(tv_system, tz_system);*/
-            
-            if (abs(unixtime - time(NULL) - LEAPSEC) > 1)
+            if (abs(unixtime - time(NULL)) > 1)
             {
                 /* if return value of function stime is 0, then
                  * the system time is successfully updated. */
-                if (stime(&(unixtime - LEAPSEC)) == 0)
+                if (stime(&unixtime) == 0)
                     fprintf(stderr,"System time updated successfully from %x to %x.\n", time(NULL), unixtime);
                 else
                     fprintf(stderr, "System time update failed!\n");
