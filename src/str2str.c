@@ -23,6 +23,13 @@ static const char rcsid[]="$Id:$";
 #define MAXRCVCMD   4096               /* max length of receiver command */
 #define TRFILE      "str2str.trace"    /* trace file */
 
+/* Added by Roice, 20141107
+ * The leap seconds since 1980-01-06-00:00:00
+ * Being used to transfer from GPS time to UTC unixtime stamp
+ * 16 seconds are the leap seconds, since 1980-01-06-00:00:00, until 2014-11-07
+ */
+#define LEAPSEC     16
+
 /* global variables ----------------------------------------------------------*/
 static strsvr_t strsvr;                /* stream server */
 static int intrflg=0;                  /* interrupt flag */
@@ -293,15 +300,16 @@ int main(int argc, char **argv)
  *             unixtime is not reloading anymore.
  */
 
-        if (unixtime != 0)
+        if (unixtime > LEAPSEC)
         {
             /* if time diff is lager than 1sec, then update */
             /*gettimeofday(tv_system, tz_system);*/
-            if (abs(unixtime - time(NULL)) > 1)
+            
+            if (abs(unixtime - time(NULL) - LEAPSEC) > 1)
             {
                 /* if return value of function stime is 0, then
                  * the system time is successfully updated. */
-                if (stime(&unixtime) == 0)
+                if (stime(&(unixtime - LEAPSEC)) == 0)
                     fprintf(stderr,"System time updated successfully from %x to %x.\n", time(NULL), unixtime);
                 else
                     fprintf(stderr, "System time update failed!\n");
