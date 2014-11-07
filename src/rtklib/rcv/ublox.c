@@ -59,6 +59,13 @@ static void setI4(unsigned char *p, int            i) {memcpy(p,&i,4);}
 static void setR4(unsigned char *p, float          r) {memcpy(p,&r,4);}
 static void setR8(unsigned char *p, double         r) {memcpy(p,&r,8);}
 
+/* Added by Roice, 20141107
+ * Global argument storing the latest unix time converted from GPS time
+ * which is extracted from GPS raw data.
+ * PS: this parameter is defined in the str2str.c file
+ */
+extern gtime_t TimeStamp;
+
 /* checksum ------------------------------------------------------------------*/
 static int checksum(unsigned char *buff, int len)
 {
@@ -150,6 +157,13 @@ static int decode_rxmraw(raw_t *raw)
     }
     raw->time=time;
     raw->obs.n=n;
+
+ /* Added by Roice, 20141107
+ * save the time info extracted from ubx raw message
+ * for system time update use
+ */
+    TimeStamp = raw->time;   
+    
     return 1;
 }
 /* save subframe -------------------------------------------------------------*/

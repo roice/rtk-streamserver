@@ -38,11 +38,12 @@
 
 static const char rcsid[]="$Id:$";
 
-/* Added by Roice, 20141015
+/* Added by Roice, 20141107
  * Global argument storing the latest unix time converted from GPS time
  * which is extracted from GPS raw data.
+ * PS: this parameter is defined in the str2str.c file
  */
-time_t unixtime = 0;
+extern gtime_t TimeStamp;
 
 /* extract field (big-endian) ------------------------------------------------*/
 #define U1(p)       (*((unsigned char *)(p)))
@@ -105,12 +106,12 @@ static int decode_stqtime(raw_t *raw)
     tow     =U4(p+4)*0.001;
     raw->time=gpst2time(week,tow);
 
-/* Added by Roice, 20141014
- * Copy the latest GPS time (unix time format) to global(extern)
- * "time_t unixtime", then it could be utilized by main function
+/* Added by Roice, 20141106
+ * copy the latest GPS time (unix time format) to global(extern)
+ * "gtime_t TimeStamp", then it could be utilized by main function
  * to update the system time.
  */
-    unixtime = raw->time.time;
+    TimeStamp = raw->time;
 
     return 0;
 }

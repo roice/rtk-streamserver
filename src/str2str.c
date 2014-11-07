@@ -23,21 +23,15 @@ static const char rcsid[]="$Id:$";
 #define MAXRCVCMD   4096               /* max length of receiver command */
 #define TRFILE      "str2str.trace"    /* trace file */
 
-/* Added by Roice, 20141107
- * The leap seconds since 1980-01-06-00:00:00
- * Being used to transfer from GPS time to UTC unixtime stamp
- * 16 seconds are the leap seconds, since 1980-01-06-00:00:00, until 2014-11-07
- */
-#define LEAPSEC     16
-
 /* global variables ----------------------------------------------------------*/
 static strsvr_t strsvr;                /* stream server */
 static int intrflg=0;                  /* interrupt flag */
 
-/* Added by Roice, 20141015
- * Defined in src/rtklib/rcv/skytraq.c:LN45
+/* Added by Roice, 20141107
+ * Global argument storing the latest unix time converted from GPS time
+ * which is extracted from GPS raw data.
  */
-extern time_t unixtime;
+gtime_t TimeStamp = {0};
 
 /* help text -----------------------------------------------------------------*/
 static const char *help[]={
@@ -275,21 +269,21 @@ int main(int argc, char **argv)
                 time_str(utc2gpst(timeget()),0),buff,byte[0],bps[0],strmsg);
        
 /* Added by Roice, 20141015
- * Function: Use the real-time reloaded time_t unixtime to update the system
+ * Function: Use the real-time reloaded gtime_t TimeStamp to update the system
  *           time.
  *
  * Note:     If the time difference is less than 1 sec, then it will not
  *           update.
  *
- *           The unixtime will be cleared to 0 at the end of this strsvrstat
+ *           The TimeStamp will be cleared to 0 at the end of this strsvrstat
  *           status cheking loop (before the time delay). So when at the
- *           beginning of this loop, if unixtime == 0, which means the
- *           unixtime has not been updated since leaving latest loop
- *           execution (usually 5 seconds before) because unixtime is
+ *           beginning of this loop, if TimeStamp == 0, which means the
+ *           TimeStamp has not been updated since leaving latest loop
+ *           execution (usually 5 seconds before) because TimeStamp is
  *           reloading very fast(20Hz for S1315F receiver), then the system
  *           time will not update.
  *
- *           The 3 main reasons for unixtime == 0 are 
+ *           The 3 main reasons for TimeStamp == 0 are 
  *           (1) the program is newly initialized and executed here the
  *             first time, 
  *           (2) the output stream(s) do not need to convert format, that
@@ -297,27 +291,31 @@ int main(int argc, char **argv)
  *             convert / time extract behavior) in src/rtklib/streamsvr.c:
  *             LN378 will not been executed at all, 
  *           (3) the GPS signal or Receiver connection was broken and
- *             unixtime is not reloading anymore.
+ *             TimeStamp is not reloading anymore.
  */
 
-        if (unixtime > LEAPSEC)
+        if (TimeStamp.time != 0)
         {
             /* convert from GPS time to UTC time */
-            unixtime = unixtime - LEAPSEC;
+            TimeStamp = gpst2utc(TimeStamp);
             /* if time diff is lager than 1sec, then update */
             /*gettimeofday(tv_system, tz_system);*/
-            if (unixtime > time(NULL)))
+            if (TimeStamp.time > time(NULL))
             {
                 /* if return value of function stime is 0, then
                  * the system time is successfully updated. */
-                if (stime(&unixtime) == 0)
-                    fprintf(stderr,"System time updated successfully from %x to %x.\n", time(NULL), unixtime);
+                if (stime(&(TimeStamp.time)) == 0)
+                    fprintf(stderr,"System time updated successfully from %x to %x.\n", time(NULL), TimeStamp.time);
                 else
                     fprintf(stderr, "System time update failed!\n");
             }
+
+
+            else
+                fprintf(stderr, "timestamp.time = %d\n", TimeStamp.time);
         }
         /* clear this time for active cheking */
-        unixtime = 0;
+        TimeStamp.time=0;
         
         sleepms(dispint);
     }

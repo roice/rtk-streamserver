@@ -32,6 +32,13 @@ static const char rcsid[]="$Id:$";
 #define P2_46       1.421085471520200E-14 /* 2^-46 */
 #define P2_59       1.734723475976810E-18 /* 2^-59 */
 
+/* Added by Roice, 20141107
+ * Global argument storing the latest unix time converted from GPS time
+ * which is extracted from GPS raw data.
+ * PS: this parameter is defined in the str2str.c file
+ */
+extern gtime_t TimeStamp;
+
 /* type definition -----------------------------------------------------------*/
 
 typedef struct {                    /* multi-signal-message header type */
@@ -705,6 +712,13 @@ static int decode_type1019(rtcm_t *rtcm)
     }
     rtcm->nav.eph[sat-1]=eph;
     rtcm->ephsat=sat;
+
+/* Added by Roice, 20141107
+ * save the time info extracted from rtcm message
+ * for system time update use
+ */
+    TimeStamp = rtcm->time;
+    
     return 2;
 }
 /* decode type 1020: glonass ephemerides -------------------------------------*/
