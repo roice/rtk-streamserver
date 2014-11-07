@@ -306,7 +306,7 @@ int main(int argc, char **argv)
             unixtime = unixtime - LEAPSEC;
             /* if time diff is lager than 1sec, then update */
             /*gettimeofday(tv_system, tz_system);*/
-            if (abs(unixtime - time(NULL)) > 1)
+            if (unixtime > time(NULL)))
             {
                 /* if return value of function stime is 0, then
                  * the system time is successfully updated. */
