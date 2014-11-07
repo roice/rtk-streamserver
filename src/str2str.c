@@ -310,9 +310,10 @@ int main(int argc, char **argv)
                     fprintf(stderr, "System time update failed!\n");
             }
 
-
+            #ifdef TSDEBUG
             else
                 fprintf(stderr, "timestamp.time = %d\n", TimeStamp.time);
+            #endif
         }
         /* clear this time for active cheking */
         TimeStamp.time=0;
